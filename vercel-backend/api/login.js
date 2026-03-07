@@ -5,7 +5,9 @@ import jwt from 'jsonwebtoken';
 const MONGODB_URI =
   'mongodb+srv://cuentapruebaalex000_db_user:<db_password>@cards0.n7acokp.mongodb.net/?appName=Cards0';
 const DB_NAME = 'barrio';
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  'your_jwt_secret_key_very_secure_and_long_enough_to_prevent_brute_force_attacks_change_this_in_production';
 
 let cachedClient = null;
 
