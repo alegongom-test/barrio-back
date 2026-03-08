@@ -53,6 +53,8 @@ export default async function handler(req, res) {
         nickname: user.nickname,
         createdAt: user.createdAt,
         lastConnection: user.lastConnection,
+        inventory: user.inventory ?? '',
+        stats: user.stats ?? null,
       },
     });
   } catch (error) {

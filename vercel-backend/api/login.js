@@ -2,9 +2,9 @@ import { MongoClient } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-const DB_NAME = process.env.DB_NAME || 'Cards0';
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
+const MONGODB_URI = process.env.MONGODB_URI;
+const DB_NAME = process.env.DB_NAME || 'myapp';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 let cachedClient = null;
 
@@ -22,16 +22,13 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST')
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
     const { nickname, password } = req.body;
 
     if (!nickname || !password) {
-      return res
-        .status(400)
-        .json({ error: 'nickname y password son requeridos' });
+      return res.status(400).json({ error: 'nickname y password son requeridos' });
     }
 
     const client = await connectDB();
@@ -48,15 +45,12 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
-    await users.updateOne(
-      { _id: user._id },
-      { $set: { lastConnection: new Date() } },
-    );
+    await users.updateOne({ _id: user._id }, { $set: { lastConnection: new Date() } });
 
     const token = jwt.sign(
       { userId: user._id.toString(), nickname: user.nickname },
       JWT_SECRET,
-      { expiresIn: '7d' },
+      { expiresIn: '7d' }
     );
 
     return res.status(200).json({
@@ -67,6 +61,8 @@ export default async function handler(req, res) {
         nickname: user.nickname,
         createdAt: user.createdAt,
         lastConnection: new Date(),
+        inventory: user.inventory ?? '',
+        stats: user.stats ?? null,
       },
     });
   } catch (error) {
