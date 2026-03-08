@@ -11,7 +11,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'GET')
+    return res.status(405).json({ error: 'Method not allowed' });
 
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
@@ -32,29 +33,42 @@ export default async function handler(req, res) {
     const userId = new ObjectId(payload.userId);
     const now = new Date();
 
-    // Check if user has called this endpoint in the last hour — return cached if so
+    // Nicknames this user has already interacted with — always excluded
+    const interactions = await db
+      .collection('barrio_people_interactions')
+      .find({ userId }, { projection: { _id: 0, nickname: 1 } })
+      .toArray();
+    const interactedSet = new Set(interactions.map((i) => i.nickname));
+
     const requestsCol = db.collection('barrio_people_requests');
     const existing = await requestsCol.findOne({ userId });
 
     if (existing && now - existing.lastRequested < ONE_HOUR_MS) {
+      // Return cached list filtered by interactions recorded since the cache was set
+      const people = existing.people.filter(
+        (p) => !interactedSet.has(p.nickname),
+      );
       return res.status(200).json({
         success: true,
-        people: existing.people,
+        people,
         cached: true,
         nextAllowed: new Date(existing.lastRequested.getTime() + ONE_HOUR_MS),
       });
     }
 
-    // Fetch 5 random documents from barrio_people
-    const people = await db
+    // Sample 20 to ensure we can find 5 after filtering interacted ones
+    const raw = await db
       .collection('barrio_people')
       .aggregate([
-        { $sample: { size: 5 } },
+        { $sample: { size: 20 } },
         { $project: { _id: 0, nickname: 1, description: 1, attributes: 1 } },
       ])
       .toArray();
 
-    // Persist the new result and timestamp
+    const people = raw
+      .filter((p) => !interactedSet.has(p.nickname))
+      .slice(0, 5);
+
     await requestsCol.updateOne(
       { userId },
       { $set: { userId, lastRequested: now, people } },
