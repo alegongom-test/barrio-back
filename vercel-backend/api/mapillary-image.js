@@ -43,7 +43,7 @@ export default async function handler(req, res) {
         `https://graph.mapillary.com/images` +
         `?fields=id,geometry,computed_geometry` +
         `&bbox=${bbox}` +
-        `&limit=1`;
+        `&limit=10`;
 
       const response = await fetch(url, {
         headers: { Authorization: `OAuth ${MAPILLARY_TOKEN}` },
