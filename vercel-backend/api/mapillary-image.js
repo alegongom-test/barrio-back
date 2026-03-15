@@ -3,8 +3,8 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET;
 const MAPILLARY_TOKEN = process.env.MAPILLARY_ACCESS_TOKEN;
 
-/** Bounding boxes to try, from smallest (~500 m) to largest (~5 km). */
-const DELTAS = [0.005, 0.01, 0.025, 0.05];
+/** Bounding boxes to try, from ~20 m to ~40 m. */
+const DELTAS = [0.0002, 0.0003, 0.0004];
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
         `https://graph.mapillary.com/images` +
         `?fields=id,geometry,computed_geometry` +
         `&bbox=${bbox}` +
-        `&limit=100`;
+        `&limit=1`;
 
       const response = await fetch(url, {
         headers: { Authorization: `OAuth ${MAPILLARY_TOKEN}` },
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
       const data = await response.json();
 
       if (data.data?.length > 0) {
-        const image = data.data[Math.floor(Math.random() * data.data.length)];
+        const image = data.data[0];
 
         // GeoJSON coordinates: [longitude, latitude]
         const coords =
