@@ -12,7 +12,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'GET')
+    return res.status(405).json({ error: 'Method not allowed' });
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   const authHeader = req.headers.authorization;
@@ -42,10 +43,11 @@ export default async function handler(req, res) {
         `https://graph.mapillary.com/images` +
         `?fields=id,geometry,computed_geometry` +
         `&bbox=${bbox}` +
-        `&limit=100` +
-        `&access_token=${MAPILLARY_TOKEN}`;
+        `&limit=100`;
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: { Authorization: `OAuth ${MAPILLARY_TOKEN}` },
+      });
 
       if (!response.ok) {
         const body = await response.text();
@@ -70,7 +72,9 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(404).json({ error: 'No se encontraron imágenes en esta zona' });
+    return res
+      .status(404)
+      .json({ error: 'No se encontraron imágenes en esta zona' });
   } catch (error) {
     console.error('Error mapillary-image:', error);
     return res.status(500).json({ error: 'Error interno del servidor' });
