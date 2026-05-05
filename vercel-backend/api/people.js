@@ -36,7 +36,10 @@ export default async function handler(req, res) {
     // Nicknames this user has already interacted with — always excluded
     const interactions = await db
       .collection('barrio_people_interactions')
-      .find({ userId }, { projection: { _id: 0, nickname: 1 } })
+      .find(
+        { userId, interactedAt: { $gte: new Date(now - ONE_HOUR_MS) } },
+        { projection: { _id: 0, nickname: 1 } },
+      )
       .toArray();
     const interactedSet = new Set(interactions.map((i) => i.nickname));
 
