@@ -3,7 +3,9 @@ import jwt from 'jsonwebtoken';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
-const ONE_HOUR_MS = 60 * 60 * 1000;
+const ONE_HOUR_MS = process.env.PEOPLE_REFRESH_TIME
+  ? parseInt(process.env.PEOPLE_REFRESH_TIME)
+  : 3600000;
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
